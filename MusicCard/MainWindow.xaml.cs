@@ -1,39 +1,8 @@
-using System;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Linq;
-using Windows.Storage;
-using WinRT; // for InitializeWithWindow
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+using System;
+using Windows.Storage;
+using WinRT.Interop;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -42,12 +11,14 @@ namespace MusicCard
 {
     public sealed partial class MainWindow : Window
     {
+        private string? _filePath;
+
         public MainWindow()
         {
             this.InitializeComponent();
 
             // Pod³¹czamy obs³ugê zdarzeñ do istniej¹cych kontrolek z XAML
-            SelectFileButton.Click += ChooseButton_Click;
+            SelectFileButton.Click += SelectFileButton_Click;
 
             // Dla demonstracji: przypiszemy Start/Stop PlaySound do sekcji "PlaySound" (StartOneButton / StopOneButton)
             StartOneButton.Click += PlayStartButton_Click;
@@ -60,14 +31,14 @@ namespace MusicCard
             PauseOneButton.IsEnabled = false;
         }
 
-        private async void ChooseButton_Click(object sender, RoutedEventArgs e)
+        private async void SelectFileButton_Click(object sender, RoutedEventArgs e)
         {
             var picker = new Windows.Storage.Pickers.FileOpenPicker();
             picker.FileTypeFilter.Add(".wav");
 
             // WinUI3: trzeba zainicjalizowaæ picker oknem natywnym
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+            var hwnd = WindowNative.GetWindowHandle(this);
+            InitializeWithWindow.Initialize(picker, hwnd);
 
             StorageFile? file = await picker.PickSingleFileAsync();
             if (file != null)
@@ -84,8 +55,12 @@ namespace MusicCard
             if (string.IsNullOrEmpty(_filePath))
                 return;
 
-            
+            NativeMethods.PlaySound(_filePath, IntPtr.Zero, NativeMethods.SoundFlags.SND_FILENAME | NativeMethods.SoundFlags.SND_ASYNC);
         }
 
+        private void PlayStopButton_Click(object sender, RoutedEventArgs e)
+        {
+            NativeMethods.PlaySound(null, IntPtr.Zero, NativeMethods.SoundFlags.SND_PURGE);
+        }
     }
 }
