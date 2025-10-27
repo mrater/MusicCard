@@ -1,6 +1,9 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Windows.Media.Core;
 using Windows.Storage;
 using WinRT.Interop;
@@ -13,6 +16,16 @@ namespace MusicCard
     public sealed partial class MainWindow : Window
     {
         private string? _filePath;
+        private StorageFile? file;
+
+        // Playback fields (moved to instance scope so StopWave can access them)
+        private IntPtr hWaveOut = IntPtr.Zero;
+        private GCHandle? audioHandle;
+        private bool isPlaying = false;
+
+        // Header state for unprepare
+        private WaveHeader waveHeader;
+        private bool headerPrepared = false;
 
         public MainWindow()
         {
@@ -24,6 +37,8 @@ namespace MusicCard
             // Dla demonstracji: przypiszemy Start/Stop PlaySound do sekcji "PlaySound" (StartOneButton / StopOneButton)
             StartOneButton.Click += PlayStartFirstButton_Click;
             StopOneButton.Click += PlayStopFirstButton_Click;
+
+            StartThreeButton.Click += PlayWaveAsync;
 
             // Na start przyciski wy³¹czone dopóki nie wybierzemy pliku
             StartOneButton.IsEnabled = false;
@@ -39,7 +54,7 @@ namespace MusicCard
             var hwnd = WindowNative.GetWindowHandle(this);
             InitializeWithWindow.Initialize(picker, hwnd);
 
-            StorageFile? file = await picker.PickSingleFileAsync();
+            file = await picker.PickSingleFileAsync();
             if (file != null)
             {
                 _filePath = file.Path;
@@ -62,6 +77,151 @@ namespace MusicCard
         private void PlayStopFirstButton_Click(object sender, RoutedEventArgs e)
         {
             NativeMethods.PlaySound(null, IntPtr.Zero, NativeMethods.SoundFlags.SND_PURGE);
+        }
+
+        // --- P/Invoke definicje ---
+        [DllImport("winmm.dll", SetLastError = true)]
+        static extern int waveOutOpen(out IntPtr hWaveOut, int uDeviceID, ref WaveFormat lpFormat, IntPtr dwCallback, IntPtr dwInstance, int dwFlags);
+
+        [DllImport("winmm.dll", SetLastError = true)]
+        static extern int waveOutPrepareHeader(IntPtr hWaveOut, ref WaveHeader lpWaveOutHdr, int uSize);
+
+        [DllImport("winmm.dll", SetLastError = true)]
+        static extern int waveOutWrite(IntPtr hWaveOut, ref WaveHeader lpWaveOutHdr, int uSize);
+
+        [DllImport("winmm.dll", SetLastError = true)]
+        static extern int waveOutClose(IntPtr hWaveOut);
+
+        [DllImport("winmm.dll", SetLastError = true)]
+        static extern int waveOutReset(IntPtr hWaveOut);
+
+        [DllImport("winmm.dll", SetLastError = true)]
+        static extern int waveOutUnprepareHeader(IntPtr hWaveOut, ref WaveHeader lpWaveOutHdr, int uSize);
+
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct WaveFormat
+        {
+            public ushort wFormatTag;
+            public ushort nChannels;
+            public uint nSamplesPerSec;
+            public uint nAvgBytesPerSec;
+            public ushort nBlockAlign;
+            public ushort wBitsPerSample;
+            public ushort cbSize;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct WaveHeader
+        {
+            public IntPtr lpData;
+            public uint dwBufferLength;
+            public uint dwBytesRecorded;
+            public IntPtr dwUser;
+            public uint dwFlags;
+            public uint dwLoops;
+            public IntPtr lpNext;
+            public IntPtr reserved;
+        }
+
+        private async void PlayWaveAsync(object sender, RoutedEventArgs e)
+        {
+            if (file == null)
+                return;
+
+            byte[] data = await File.ReadAllBytesAsync(file.Path);
+            if (System.Text.Encoding.ASCII.GetString(data, 0, 4) != "RIFF")
+            {
+                return;
+            }
+
+            // Proste parsowanie WAV headera (PCM)
+            int fmtPos = BitConverter.ToInt32(data, 12) == 0x20746D66 ? 12 : 20;
+            int sampleRate = BitConverter.ToInt32(data, fmtPos + 12);
+            short bits = BitConverter.ToInt16(data, fmtPos + 22);
+            short channels = BitConverter.ToInt16(data, fmtPos + 10);
+
+            int dataPos = Array.IndexOf(data, (byte)'d', 36); // znajdŸ "data"
+            while (dataPos < data.Length - 4 && System.Text.Encoding.ASCII.GetString(data, dataPos, 4) != "data")
+                dataPos++;
+            int dataSize = BitConverter.ToInt32(data, dataPos + 4);
+            int dataOffset = dataPos + 8;
+
+            var fmt = new WaveFormat
+            {
+                wFormatTag = 1, // PCM
+                nChannels = (ushort)channels,
+                nSamplesPerSec = (uint)sampleRate,
+                wBitsPerSample = (ushort)bits,
+                nBlockAlign = (ushort)((bits / 8) * channels),
+                nAvgBytesPerSec = (uint)(sampleRate * channels * bits / 8),
+                cbSize = 0
+            };
+
+            IntPtr localWaveOut;
+            int result = waveOutOpen(out localWaveOut, -1, ref fmt, IntPtr.Zero, IntPtr.Zero, 0);
+            if (result != 0)
+            {
+                return;
+            }
+
+            // Pin audio buffer and store state in instance fields so StopWave can access them
+            var handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+            this.audioHandle = handle;
+
+            this.waveHeader = new WaveHeader
+            {
+                lpData = handle.AddrOfPinnedObject() + dataOffset,
+                dwBufferLength = (uint)dataSize,
+                dwFlags = 0,
+                dwLoops = 0
+            };
+
+            // assign device handle to instance
+            this.hWaveOut = localWaveOut;
+
+            int sz = Marshal.SizeOf<WaveHeader>();
+            waveOutPrepareHeader(this.hWaveOut, ref this.waveHeader, sz);
+            headerPrepared = true;
+
+            waveOutWrite(this.hWaveOut, ref this.waveHeader, sz);
+
+            isPlaying = true;
+
+            // Poczekaj a¿ dŸwiêk siê odtworzy (nieblokuj¹co)
+            await System.Threading.Tasks.Task.Delay(dataSize / (int)fmt.nAvgBytesPerSec * 1000 + 500);
+
+            // After playback completes, if not stopped externally, clean up
+            try
+            {
+                if (isPlaying && hWaveOut != IntPtr.Zero)
+                {
+                    if (headerPrepared)
+                    {
+                        waveOutUnprepareHeader(this.hWaveOut, ref this.waveHeader, sz);
+                        headerPrepared = false;
+                    }
+                    waveOutClose(this.hWaveOut);
+                    this.hWaveOut = IntPtr.Zero;
+                }
+            }
+            finally
+            {
+                if (this.audioHandle.HasValue && this.audioHandle.Value.IsAllocated)
+                {
+                    this.audioHandle.Value.Free();
+                    this.audioHandle = null;
+                }
+                isPlaying = false;
+            }
+        }
+        private async void StopButtonThree_Click(object sender, RoutedEventArgs e)
+        {
+            await StopThreePlaybackAsync();
+        }
+        private async Task StopThreePlaybackAsync()
+        {
+            //TODO : implement stop logic for third button playback
         }
     }
 }

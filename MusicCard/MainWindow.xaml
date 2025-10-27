@@ -45,15 +45,9 @@
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="100"/>
-                        <ColumnDefinition Width="100"/>
-                        <ColumnDefinition Width="100"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="Windows" VerticalAlignment="Center" FontSize="16" />
-                    <MediaPlayerElement x:Name="mediaPlayerControl" Width="500" Height="200" AreTransportControlsEnabled="True"/>
-                    <Button x:Name="StartTwoButton" Grid.Column="1" Content="Start" Margin="6,0,0,0" Height="30"/>
-                    <Button x:Name="StopTwoButton" Grid.Column="2" Content="Stop" Margin="6,0,0,0" Height="30"/>
-                    <Button x:Name="PauseTwoButton" Grid.Column="3" Content="Pause" Margin="6,0,0,0" Height="30"/>
+                    <MediaPlayerElement x:Name="mediaPlayerControl" HorizontalAlignment="Right" Width="500" Height="200" AreTransportControlsEnabled="True"/>
                 </Grid>
 
                 <!-- Point Three -->
@@ -65,8 +59,8 @@
                         <ColumnDefinition Width="100"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="Three" VerticalAlignment="Center" FontSize="16" />
-                    <Button x:Name="StartThreeButton" Grid.Column="1" Content="Start" Margin="6,0,0,0" Height="30"/>
-                    <Button x:Name="StopThreeButton" Grid.Column="2" Content="Stop" Margin="6,0,0,0" Height="30"/>
+                    <Button x:Name="StartThreeButton" Grid.Column="1" Content="Start" Margin="6,0,0,0" Height="30" Click="PlayWaveAsync"/>
+                    <Button x:Name="StopThreeButton" Grid.Column="2" Content="Stop" Click="StopButtonThree_Click" Margin="6,0,0,0" Height="30"/>
                     <Button x:Name="PauseThreeButton" Grid.Column="3" Content="Pause" Margin="6,0,0,0" Height="30"/>
                 </Grid>
 
