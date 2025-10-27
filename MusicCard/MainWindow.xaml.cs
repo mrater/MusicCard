@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using Windows.Media.Core;
 using Windows.Storage;
 using WinRT.Interop;
 
@@ -21,14 +22,12 @@ namespace MusicCard
             SelectFileButton.Click += SelectFileButton_Click;
 
             // Dla demonstracji: przypiszemy Start/Stop PlaySound do sekcji "PlaySound" (StartOneButton / StopOneButton)
-            StartOneButton.Click += PlayStartButton_Click;
-            StopOneButton.Click += PlayStopButton_Click;
+            StartOneButton.Click += PlayStartFirstButton_Click;
+            StopOneButton.Click += PlayStopFirstButton_Click;
 
             // Na start przyciski wy³¹czone dopóki nie wybierzemy pliku
             StartOneButton.IsEnabled = false;
             StopOneButton.IsEnabled = false;
-            // Opcjonalnie wy³¹cz Pause jeœli nieobs³ugiwany
-            PauseOneButton.IsEnabled = false;
         }
 
         private async void SelectFileButton_Click(object sender, RoutedEventArgs e)
@@ -47,10 +46,12 @@ namespace MusicCard
                 SelectedFileText.Text = _filePath;
                 StartOneButton.IsEnabled = true;
                 StopOneButton.IsEnabled = true;
+
+                mediaPlayerControl.Source = MediaSource.CreateFromStorageFile(file);
             }
         }
 
-        private void PlayStartButton_Click(object sender, RoutedEventArgs e)
+        private void PlayStartFirstButton_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrEmpty(_filePath))
                 return;
@@ -58,7 +59,7 @@ namespace MusicCard
             NativeMethods.PlaySound(_filePath, IntPtr.Zero, NativeMethods.SoundFlags.SND_FILENAME | NativeMethods.SoundFlags.SND_ASYNC);
         }
 
-        private void PlayStopButton_Click(object sender, RoutedEventArgs e)
+        private void PlayStopFirstButton_Click(object sender, RoutedEventArgs e)
         {
             NativeMethods.PlaySound(null, IntPtr.Zero, NativeMethods.SoundFlags.SND_PURGE);
         }
