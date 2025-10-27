@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Media.Core;
 using Windows.Storage;
+using Windows.Storage.Pickers;
 using WinRT.Interop;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -39,11 +40,15 @@ namespace MusicCard
             StartOneButton.Click += PlayStartFirstButton_Click;
             StopOneButton.Click += PlayStopFirstButton_Click;
 
-            StartThreeButton.Click += PlayWaveAsync;
+            // MCI Recording
+            RecordStartButton.Click += RecordStartButton_Click;
+            RecordStopButton.Click += RecordStopButton_Click;
+
 
             // Na start przyciski wy³¹czone dopóki nie wybierzemy pliku
             StartOneButton.IsEnabled = false;
             StopOneButton.IsEnabled = false;
+            RecordStopButton.IsEnabled = false; // Przycisk stopu jest wy³¹czony na starcie
         }
 
         private async void SelectFileButton_Click(object sender, RoutedEventArgs e)
@@ -98,11 +103,6 @@ namespace MusicCard
 
         [DllImport("winmm.dll", SetLastError = true)]
         static extern int waveOutUnprepareHeader(IntPtr hWaveOut, ref WaveHeader lpWaveOutHdr, int uSize);
-
-        [DllImport("winmm.dll", CharSet = CharSet.Unicode)]
-        internal static extern int mciSendString(string lpszCommand, StringBuilder? lpszReturnString, int cchReturn, System.IntPtr hwndCallback);
-
-
 
         [StructLayout(LayoutKind.Sequential)]
         struct WaveFormat
@@ -226,27 +226,47 @@ namespace MusicCard
         }
         private async Task StopThreePlaybackAsync()
         {
-            //TODO : implement stop logic for third button playback
+            if (!isPlaying || hWaveOut == IntPtr.Zero) return;
+
+            isPlaying = false; // Prevent cleanup timer from running
+
+            waveOutReset(hWaveOut); // Stop playback immediately
+
+            int sz = Marshal.SizeOf<WaveHeader>();
+            if (headerPrepared)
+            {
+                waveOutUnprepareHeader(hWaveOut, ref waveHeader, sz);
+                headerPrepared = false;
+            }
+
+            waveOutClose(hWaveOut);
+            hWaveOut = IntPtr.Zero;
+
+            if (audioHandle.HasValue && audioHandle.Value.IsAllocated)
+            {
+                audioHandle.Value.Free();
+                audioHandle = null;
+            }
         }
 
-        // Metoda 2: MCI
+        // Metoda 4: MCI
         private void MciStartButton_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrEmpty(_filePath))
                 return;
 
             // Zamknij poprzedni, jeœli by³ otwarty, i otwórz nowy
-            mciSendString("close MyMciSound", null, 0, IntPtr.Zero);
-            mciSendString($"open \"{_filePath}\" alias MyMciSound", null, 0, IntPtr.Zero);
+            NativeMethods.mciSendString("close MyMciSound", null, 0, IntPtr.Zero);
+            NativeMethods.mciSendString($"open \"{_filePath}\" alias MyMciSound", null, 0, IntPtr.Zero);
             // Odtwórz od pocz¹tku
-            mciSendString("play MyMciSound from 0", null, 0, IntPtr.Zero);
+            NativeMethods.mciSendString("play MyMciSound from 0", null, 0, IntPtr.Zero);
         }
 
         private void MciStopButton_Click(object sender, RoutedEventArgs e)
         {
             // Zatrzymaj i zamknij
-            mciSendString("stop MyMciSound", null, 0, IntPtr.Zero);
-            mciSendString("close MyMciSound", null, 0, IntPtr.Zero);
+            NativeMethods.mciSendString("stop MyMciSound", null, 0, IntPtr.Zero);
+            NativeMethods.mciSendString("close MyMciSound", null, 0, IntPtr.Zero);
         }
 
 
@@ -254,7 +274,41 @@ namespace MusicCard
         private void MciPauseButton_Click(object sender, RoutedEventArgs e)
         {
             // Wstrzymaj odtwarzanie
-            mciSendString("pause MyMciSound", null, 0, IntPtr.Zero);
+            NativeMethods.mciSendString("pause MyMciSound", null, 0, IntPtr.Zero);
+        }
+
+        // Metoda 6: MCI Recording
+        private void RecordStartButton_Click(object sender, RoutedEventArgs e)
+        {
+            NativeMethods.mciSendString("open new type waveaudio alias MyRecording", null, 0, IntPtr.Zero);
+            NativeMethods.mciSendString("record MyRecording", null, 0, IntPtr.Zero);
+
+            RecordStartButton.IsEnabled = false;
+            RecordStopButton.IsEnabled = true;
+        }
+
+        private async void RecordStopButton_Click(object sender, RoutedEventArgs e)
+        {
+            NativeMethods.mciSendString("stop MyRecording", null, 0, IntPtr.Zero);
+
+            var savePicker = new FileSavePicker();
+            savePicker.SuggestedStartLocation = PickerLocationId.MusicLibrary;
+            savePicker.FileTypeChoices.Add("WAV file", new System.Collections.Generic.List<string>() { ".wav" });
+            savePicker.SuggestedFileName = "recording";
+
+            var hwnd = WindowNative.GetWindowHandle(this);
+            InitializeWithWindow.Initialize(savePicker, hwnd);
+
+            StorageFile file = await savePicker.PickSaveFileAsync();
+            if (file != null)
+            {
+                NativeMethods.mciSendString($"save MyRecording \"{file.Path}\"", null, 0, IntPtr.Zero);
+            }
+
+            NativeMethods.mciSendString("close MyRecording", null, 0, IntPtr.Zero);
+
+            RecordStartButton.IsEnabled = true;
+            RecordStopButton.IsEnabled = false;
         }
     }
 }

@@ -58,7 +58,7 @@
                         <ColumnDefinition Width="100"/>
                         <ColumnDefinition Width="100"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Three" VerticalAlignment="Center" FontSize="16" />
+                    <TextBlock Grid.Column="0" Text="WaveOutWrite" VerticalAlignment="Center" FontSize="16" />
                     <Button x:Name="StartThreeButton" Grid.Column="1" Content="Start" Margin="6,0,0,0" Height="30" Click="PlayWaveAsync"/>
                     <Button x:Name="StopThreeButton" Grid.Column="2" Content="Stop" Click="StopButtonThree_Click" Margin="6,0,0,0" Height="30"/>
                     <Button x:Name="PauseThreeButton" Grid.Column="3" Content="Pause" Margin="6,0,0,0" Height="30"/>
@@ -72,7 +72,7 @@
                         <ColumnDefinition Width="100"/>
                         <ColumnDefinition Width="100"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Four" VerticalAlignment="Center" FontSize="16" />
+                    <TextBlock Grid.Column="0" Text="MCI" VerticalAlignment="Center" FontSize="16" />
                     <Button x:Name="StartFourButton" Grid.Column="1" Content="Start" Click="MciStartButton_Click" Margin="6,0,0,0" Height="30"/>
                     <Button x:Name="StopFourButton" Grid.Column="2" Content="Stop" Margin="6,0,0,0" Height="30" Click="MciStopButton_Click"/>
                     <Button x:Name="PauseFourButton" Grid.Column="3" Content="Pause" Margin="6,0,0,0" Height="30" Click="MciPauseButton_Click"/>
@@ -90,6 +90,18 @@
                     <Button x:Name="StartFiveButton" Grid.Column="1" Content="Start" Margin="6,0,0,0" Height="30"/>
                     <Button x:Name="StopFiveButton" Grid.Column="2" Content="Stop" Margin="6,0,0,0" Height="30"/>
                     <Button x:Name="PauseFiveButton" Grid.Column="3" Content="Pause" Margin="6,0,0,0" Height="30"/>
+                </Grid>
+
+                <!-- Point Six - MCI Recording -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="120"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="MCI Recording" VerticalAlignment="Center" FontSize="16" />
+                    <Button x:Name="RecordStartButton" Grid.Column="1" Content="Start Recording" Margin="6,0,0,0" Height="30"/>
+                    <Button x:Name="RecordStopButton" Grid.Column="2" Content="Stop &amp; Save" Margin="6,0,0,0" Height="30"/>
                 </Grid>
 
             </StackPanel>

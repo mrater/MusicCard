@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace MusicCard
 {
@@ -7,6 +8,9 @@ namespace MusicCard
         [DllImport("winmm.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool PlaySound(string? pszSound, System.IntPtr hmod, SoundFlags fdwSound);
+
+        [DllImport("winmm.dll", CharSet = CharSet.Unicode)]
+        internal static extern int mciSendString(string lpszCommand, StringBuilder? lpszReturnString, int cchReturn, System.IntPtr hwndCallback);
 
         [System.Flags]
         internal enum SoundFlags : int
