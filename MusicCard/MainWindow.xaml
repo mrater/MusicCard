@@ -64,7 +64,7 @@
                     <Button x:Name="PauseThreeButton" Grid.Column="3" Content="Pause" Margin="6,0,0,0" Height="30"/>
                 </Grid>
 
-                <!-- Point Four -->
+                <!-- Point Four MCI -->
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -73,9 +73,9 @@
                         <ColumnDefinition Width="100"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="Four" VerticalAlignment="Center" FontSize="16" />
-                    <Button x:Name="StartFourButton" Grid.Column="1" Content="Start" Margin="6,0,0,0" Height="30"/>
-                    <Button x:Name="StopFourButton" Grid.Column="2" Content="Stop" Margin="6,0,0,0" Height="30"/>
-                    <Button x:Name="PauseFourButton" Grid.Column="3" Content="Pause" Margin="6,0,0,0" Height="30"/>
+                    <Button x:Name="StartFourButton" Grid.Column="1" Content="Start" Click="MciStartButton_Click" Margin="6,0,0,0" Height="30"/>
+                    <Button x:Name="StopFourButton" Grid.Column="2" Content="Stop" Margin="6,0,0,0" Height="30" Click="MciStopButton_Click"/>
+                    <Button x:Name="PauseFourButton" Grid.Column="3" Content="Pause" Margin="6,0,0,0" Height="30" Click="MciPauseButton_Click"/>
                 </Grid>
 
                 <!-- Point Five -->

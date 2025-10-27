@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 using Windows.Media.Core;
 using Windows.Storage;
@@ -97,6 +98,10 @@ namespace MusicCard
 
         [DllImport("winmm.dll", SetLastError = true)]
         static extern int waveOutUnprepareHeader(IntPtr hWaveOut, ref WaveHeader lpWaveOutHdr, int uSize);
+
+        [DllImport("winmm.dll", CharSet = CharSet.Unicode)]
+        internal static extern int mciSendString(string lpszCommand, StringBuilder? lpszReturnString, int cchReturn, System.IntPtr hwndCallback);
+
 
 
         [StructLayout(LayoutKind.Sequential)]
@@ -222,6 +227,34 @@ namespace MusicCard
         private async Task StopThreePlaybackAsync()
         {
             //TODO : implement stop logic for third button playback
+        }
+
+        // Metoda 2: MCI
+        private void MciStartButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(_filePath))
+                return;
+
+            // Zamknij poprzedni, jeœli by³ otwarty, i otwórz nowy
+            mciSendString("close MyMciSound", null, 0, IntPtr.Zero);
+            mciSendString($"open \"{_filePath}\" alias MyMciSound", null, 0, IntPtr.Zero);
+            // Odtwórz od pocz¹tku
+            mciSendString("play MyMciSound from 0", null, 0, IntPtr.Zero);
+        }
+
+        private void MciStopButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Zatrzymaj i zamknij
+            mciSendString("stop MyMciSound", null, 0, IntPtr.Zero);
+            mciSendString("close MyMciSound", null, 0, IntPtr.Zero);
+        }
+
+
+        /// TODO: fix: pause works like stop
+        private void MciPauseButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Wstrzymaj odtwarzanie
+            mciSendString("pause MyMciSound", null, 0, IntPtr.Zero);
         }
     }
 }
