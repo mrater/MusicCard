@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="MusicCard.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MusicCard"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="MusicCard">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid Padding="12" RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar: Select File -->
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.Row="0" Spacing="8">
+            <Button x:Name="SelectFileButton" Content="Select File..." Width="120" Height="32" />
+            <TextBlock x:Name="SelectedFileText" Text="No file selected" VerticalAlignment="Center" Margin="4,0,0,0"/>
+        </StackPanel>
+
+        <!-- Points list -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,8,0,0">
+            <StackPanel Orientation="Vertical" Spacing="10">
+
+                <!-- Point One -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="PlaySound" VerticalAlignment="Center" FontSize="16" />
+                    <Button x:Name="StartOneButton" Grid.Column="1" Content="Start" Margin="6,0,0,0" Height="30"/>
+                    <Button x:Name="StopOneButton" Grid.Column="2" Content="Stop" Margin="6,0,0,0" Height="30"/>
+                    <Button x:Name="PauseOneButton" Grid.Column="3" Content="Pause" Margin="6,0,0,0" Height="30"/>
+                </Grid>
+
+                <!-- Point Two -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Windows" VerticalAlignment="Center" FontSize="16" />
+                    <Button x:Name="StartTwoButton" Grid.Column="1" Content="Start" Margin="6,0,0,0" Height="30"/>
+                    <Button x:Name="StopTwoButton" Grid.Column="2" Content="Stop" Margin="6,0,0,0" Height="30"/>
+                    <Button x:Name="PauseTwoButton" Grid.Column="3" Content="Pause" Margin="6,0,0,0" Height="30"/>
+                </Grid>
+
+                <!-- Point Three -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Three" VerticalAlignment="Center" FontSize="16" />
+                    <Button x:Name="StartThreeButton" Grid.Column="1" Content="Start" Margin="6,0,0,0" Height="30"/>
+                    <Button x:Name="StopThreeButton" Grid.Column="2" Content="Stop" Margin="6,0,0,0" Height="30"/>
+                    <Button x:Name="PauseThreeButton" Grid.Column="3" Content="Pause" Margin="6,0,0,0" Height="30"/>
+                </Grid>
+
+                <!-- Point Four -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Four" VerticalAlignment="Center" FontSize="16" />
+                    <Button x:Name="StartFourButton" Grid.Column="1" Content="Start" Margin="6,0,0,0" Height="30"/>
+                    <Button x:Name="StopFourButton" Grid.Column="2" Content="Stop" Margin="6,0,0,0" Height="30"/>
+                    <Button x:Name="PauseFourButton" Grid.Column="3" Content="Pause" Margin="6,0,0,0" Height="30"/>
+                </Grid>
+
+                <!-- Point Five -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Five" VerticalAlignment="Center" FontSize="16" />
+                    <Button x:Name="StartFiveButton" Grid.Column="1" Content="Start" Margin="6,0,0,0" Height="30"/>
+                    <Button x:Name="StopFiveButton" Grid.Column="2" Content="Stop" Margin="6,0,0,0" Height="30"/>
+                    <Button x:Name="PauseFiveButton" Grid.Column="3" Content="Pause" Margin="6,0,0,0" Height="30"/>
+                </Grid>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>
