@@ -20,7 +20,7 @@
 
         <!-- Toolbar: Select File -->
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.Row="0" Spacing="8">
-            <Button x:Name="SelectFileButton" Content="Select File..." Width="120" Height="32" />
+            <Button x:Name="SelectFileButton" Click="SelectFileButton_Click" Content="Select File..." Width="120" Height="32" />
             <TextBlock x:Name="SelectedFileText" Text="No file selected" VerticalAlignment="Center" Margin="4,0,0,0"/>
         </StackPanel>
 
