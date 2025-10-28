@@ -1,6 +1,10 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using SharpDX;
+using SharpDX.DirectSound;
+using SharpDX.Multimedia;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -28,6 +32,10 @@ namespace MusicCard
         private WaveHeader waveHeader;
         private bool headerPrepared = false;
 
+        private DirectSound? _directSoundDevice;
+        private SecondarySoundBuffer? _directSoundBuffer;
+
+
         public MainWindow()
         {
             this.InitializeComponent();
@@ -44,6 +52,15 @@ namespace MusicCard
             // Na start przyciski wy³¹czone dopóki nie wybierzemy pliku
             StartOneButton.IsEnabled = false;
             StopOneButton.IsEnabled = false;
+
+
+            InitializeDirectSound(WindowNative.GetWindowHandle(this));
+        }
+        private void InitializeDirectSound(IntPtr hwnd)
+        {
+            _directSoundDevice = new DirectSound();
+            //IntPtr hwnd = Process.GetCurrentProcess().MainWindowHandle;
+            _directSoundDevice.SetCooperativeLevel(hwnd, CooperativeLevel.Priority);
         }
 
         private async void SelectFileButton_Click(object sender, RoutedEventArgs e)
@@ -101,6 +118,8 @@ namespace MusicCard
 
         [DllImport("winmm.dll", CharSet = CharSet.Unicode)]
         internal static extern int mciSendString(string lpszCommand, StringBuilder? lpszReturnString, int cchReturn, System.IntPtr hwndCallback);
+
+
 
 
 
@@ -255,6 +274,73 @@ namespace MusicCard
         {
             // Wstrzymaj odtwarzanie
             mciSendString("pause MyMciSound", null, 0, IntPtr.Zero);
+        }
+
+
+        private async void DirectSoundStartButton_Click(object sender, RoutedEventArgs e)
+        {
+            _ = DirectSoundPlayWavFileAsync();
+        }
+
+        private async void DirectSoundStopButton_Click(object sender, RoutedEventArgs e)
+        {
+            _ = DirectSoundStopPlaybackAsync();
+        }
+
+        private async Task DirectSoundPlayWavFileAsync()
+        {
+            try
+            {
+                using var stream = await file.OpenStreamForReadAsync();
+                using var reader = new SoundStream(stream);
+                var format = reader.Format;
+
+                var bufferDescription = new SoundBufferDescription
+                {
+                    Flags = BufferFlags.ControlVolume | (EchoCheckBox.IsChecked == true ? BufferFlags.ControlEffects : 0),
+                    BufferBytes = (int)reader.Length,
+                    Format = format
+                };
+
+                _directSoundBuffer = new SecondarySoundBuffer(_directSoundDevice, bufferDescription);
+
+
+                if (EchoCheckBox.IsChecked == true)
+                {
+                    Guid[] echo = { new Guid("EF3E932C-D40B-4F51-8CCF-3F98F1B29D5D") };
+                    _directSoundBuffer.SetEffect(echo);
+                }
+
+
+
+                    byte[] audioData = new byte[reader.Length];
+                reader.Read(audioData, 0, audioData.Length);
+                _directSoundBuffer.Write(audioData, 0, LockFlags.None);
+
+
+                _directSoundBuffer.Play(0, PlayFlags.None);
+
+                // Poczekaj a¿ siê skoñczy (w przybli¿eniu)
+                await Task.Delay((int)(reader.Length / (float)format.AverageBytesPerSecond * 1000) + 500);
+                await DirectSoundStopPlaybackAsync();
+
+                
+            }
+            catch (Exception ex)
+            {
+            }
+        }
+
+        private async Task DirectSoundStopPlaybackAsync()
+        {
+            if (_directSoundBuffer != null)
+            {
+                _directSoundBuffer.Stop();
+                _directSoundBuffer.Dispose();
+                _directSoundBuffer = null;
+            }
+
+            await Task.Delay(100);
         }
     }
 }
