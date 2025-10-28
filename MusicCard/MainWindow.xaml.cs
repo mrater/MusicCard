@@ -97,7 +97,6 @@ namespace MusicCard
             NativeMethods.PlaySound(null, IntPtr.Zero, NativeMethods.SoundFlags.SND_PURGE);
         }
 
-        // --- P/Invoke definicje ---
         [DllImport("winmm.dll", SetLastError = true)]
         static extern int waveOutOpen(out IntPtr hWaveOut, int uDeviceID, ref WaveFormat lpFormat, IntPtr dwCallback, IntPtr dwInstance, int dwFlags);
 
